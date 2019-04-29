@@ -17,16 +17,14 @@ const val VALUE_RSSI = 7
 // $ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorID>
 
 fun main(args: Array<String>) {
-//    if (args.isNotEmpty()) {
-//        val records = readCSV2Records(args[0])
-//        val floorId = args[2].toInt()
-    val records = readCSV2Records("data_RadioMap.csv")
-    val floorId = 1
-    if (records.isNotEmpty()) {
-        write2File(floorId, records, "data_RadioMap.sql")
-    }
-//    } else
-//        error("Arguments are empty. Syntax information: ${"$ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorId>"}")
+    if (args.isNotEmpty()) {
+        val records = readCSV2Records(args[0])
+        val floorId = args[2].toInt()
+        if (records.isNotEmpty()) {
+            write2File(floorId, records, args[1])
+        }
+    } else
+        error("Arguments are empty. Syntax information: ${"$ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorId>"}")
 }
 
 private fun write2File(floorId: Int, records: ArrayList<Record>, fileNameQuery: String) {
