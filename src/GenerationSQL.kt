@@ -1,4 +1,7 @@
 import model.Record
+import model.Sample
+import model.SamplePosition
+import model.SampleRssi
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -14,45 +17,48 @@ const val VALUE_RSSI = 7
 // $ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorID>
 
 fun main(args: Array<String>) {
-    if (args.isNotEmpty()) {
-        val records = readCSV2Records(args[0])
-        val floorId = args[2].toInt()
-        if (records.isNotEmpty()) {
-            write2File(floorId, records, args[1])
-        }
-    } else
-        error("Arguments are empty. Syntax information: ${"$ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorId>"}")
+//    if (args.isNotEmpty()) {
+//        val records = readCSV2Records(args[0])
+//        val floorId = args[2].toInt()
+    val records = readCSV2Records("data_RadioMap.csv")
+    val floorId = 1
+    if (records.isNotEmpty()) {
+        write2File(floorId, records, "data_RadioMap.sql")
+    }
+//    } else
+//        error("Arguments are empty. Syntax information: ${"$ kotlin GenerationSQL <fileNameData.csv> <fileNameQuery.sql> <floorId>"}")
 }
 
 private fun write2File(floorId: Int, records: ArrayList<Record>, fileNameQuery: String) {
     File(fileNameQuery).printWriter().use { out ->
+
+        val samplePositions = ArrayList<SamplePosition>()
+        val samples = ArrayList<Sample>()
+        val sampleRssis = ArrayList<SampleRssi>()
+        for (record in records) {
+            samplePositions.add(SamplePosition(record.sample_pos_id, record.x, record.y, floorId))
+            samples.add(Sample(record.sample_id, record.sample_pos_id))
+            sampleRssis.add(
+                SampleRssi(
+                    record.sample_rssi_id,
+                    record.name_beacon,
+                    record.mac_beacon,
+                    record.value_rssi,
+                    record.sample_id
+                )
+            )
+        }
         out.println("-- Insert SamplePositions")
-        for (record in records) {
-            val queryInsertionSamplePosition =
-                "INSERT INTO \"SamplePositions\"(\"SamplePositionId\",\"X\",\"Y\",\"MaKhuVuc\") " +
-                        "values(${record.sample_pos_id}," +
-                        "${record.x}," +
-                        "${record.y}," +
-                        "$floorId)"
-            out.println(queryInsertionSamplePosition)
+        samplePositions.distinct().forEach {
+            out.println(it.toString())
         }
-        out.println("-- Insert Sample")
-        for (record in records) {
-            val queryInsertionSample =
-                "INSERT INTO \"Samples\"(\"SampleId\",\"SamplePositionId\") " +
-                        "values(${record.sample_id},${record.sample_pos_id})"
-            out.println(queryInsertionSample)
+        out.println("-- Insert Samples")
+        samples.distinct().forEach {
+            out.println(it.toString())
         }
-        out.println("-- Insert SampleRssi")
-        for (record in records) {
-            val queryInsertionSampleRssi =
-                "INSERT INTO \"SampleRssis\"(\"SampleRssiId\",\"Name\",\"Mac\",\"RssiValue\",\"SampleId\") " +
-                        "values(${record.sample_rssi_id}," +
-                        "\"${record.name_beacon}\"," +
-                        "\"${record.mac_beacon}\"," +
-                        "${record.value_rssi}," +
-                        "${record.sample_id})"
-            out.println(queryInsertionSampleRssi)
+        out.println("-- Insert SampleRssis")
+        sampleRssis.distinct().forEach {
+            out.println(it.toString())
         }
     }
 }
